@@ -28,7 +28,7 @@ ClientDesk brings client records, invoices, expenses, and cash-flow visibility i
 4. Run the SQL in `supabase/schema.sql` in the Supabase SQL editor.
 5. Start the app: `npm run dev`.
 
-Without Supabase credentials, the app displays a clearly labelled demo workspace. Demo data is local to the browser and is not a substitute for account-backed persistence.
+The application uses Supabase email/password authentication. Signed-in users can create clients, invoices and expenses, review their own records, and mark invoices as paid. Records are stored in PostgreSQL and protected by owner-scoped Row Level Security.\n\nFor email confirmation, add your deployed Vercel URL to Supabase Authentication → URL Configuration. Set the Site URL to `https://clientdesk-freelance-management.vercel.app` and add `https://clientdesk-freelance-management.vercel.app/auth/callback` to the Redirect URLs list.
 
 ## Environment variables
 
@@ -48,9 +48,9 @@ Database tables use owner-scoped Row Level Security. All production records must
 
 - [x] Product foundation and dashboard concept
 - [x] Supabase schema with tenant isolation
-- [ ] Authentication and persistent CRUD workflows
+- [x] Email/password authentication and core database-backed create/read/update workflows
 - [ ] Invoice PDF generation
-- [ ] Automated tests and production deployment
+- [ ] Expanded end-to-end coverage and production verification
 
 ## License
 
