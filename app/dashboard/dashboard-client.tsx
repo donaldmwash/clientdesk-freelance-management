@@ -82,8 +82,14 @@ export default function DashboardClient({ userEmail }: { userEmail: string }) {
     if (!name.trim()) return;
     const supabase = createSupabaseBrowserClient();
     setNotice("Saving record…");
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      setNotice("Your session has expired. Please sign in again.");
+      return;
+    }
+    const userId = authData.user.id;
     if (modal === "client") {
-      const { data, error } = await supabase.from("clients").insert({ name: name.trim(), company: detail.trim() || null }).select("id,name,company,email").single();
+      const { data, error } = await supabase.from("clients").insert({ user_id: userId, name: name.trim(), company: detail.trim() || null }).select("id,name,company,email").single();
       if (error) { setNotice(error.message); return; }
       setClients(prev => [{ id: data.id, name: data.name, company: data.company ?? "Independent", email: data.email ?? "", initials: data.name.split(" ").map((part: string) => part[0]).join("").slice(0, 2).toUpperCase(), tone: "bg-teal-100 text-teal-800" }, ...prev]);
     } else if (modal === "invoice") {
@@ -93,7 +99,7 @@ export default function DashboardClient({ userEmail }: { userEmail: string }) {
       if (clientError || !client) { setNotice("Add this client first, then create the invoice using the client's exact name or company."); return; }
       const dueDate = detail ? new Date(detail).toISOString().slice(0, 10) : new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
       const { data, error } = await supabase.from("invoices").insert({
-        client_id: client.id, invoice_number: `INV-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
+        user_id: userId, client_id: client.id, invoice_number: `INV-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
         due_date: dueDate, status: "sent", subtotal: value, tax: 0
       }).select("id,invoice_number,total,due_date,status").single();
       if (error) { setNotice(error.message); return; }
@@ -101,7 +107,7 @@ export default function DashboardClient({ userEmail }: { userEmail: string }) {
     } else if (modal === "expense") {
       const value = Number(amount);
       if (!Number.isFinite(value) || value <= 0) return;
-      const { data, error } = await supabase.from("expenses").insert({ description: name.trim(), category: detail.trim() || "General", amount: value }).select("id,description,category,expense_date,amount").single();
+      const { data, error } = await supabase.from("expenses").insert({ user_id: userId, description: name.trim(), category: detail.trim() || "General", amount: value }).select("id,description,category,expense_date,amount").single();
       if (error) { setNotice(error.message); return; }
       setExpenses(prev => [{ id: data.id, label: data.description, category: data.category, date: "Today", amount: Number(data.amount) }, ...prev]);
     }
