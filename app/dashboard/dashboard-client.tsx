@@ -8,6 +8,9 @@ import { Activity, ArrowDownRight, ArrowUpRight, Bell, BriefcaseBusiness, Calend
 type Client = { id: string; name: string; company: string; email: string; initials: string; tone: string };
 type Invoice = { id: string; dbId?: string; client: string; amount: number; due: string; status: "Paid" | "Pending" | "Overdue" };
 type Expense = { id: string; label: string; category: string; date: string; amount: number };
+type ClientRow = { id: string; name: string; company: string | null; email: string | null };
+type InvoiceRow = { id: string; invoice_number: string; client_id: string | null; due_date: string; status: string; total: number | string };
+type ExpenseRow = { id: string; description: string; category: string; expense_date: string; amount: number | string };
 
 const money = (value: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value);
 
@@ -44,20 +47,22 @@ export default function DashboardClient({ userEmail }: { userEmail: string }) {
         setNotice("We couldn't load your records. Check that the ClientDesk database schema has been applied.");
         return;
       }
-      const clientRows = clientResult.data ?? [];
-      const clientMap = new Map(clientRows.map((client: any) => [client.id, client]));
-      setClients(clientRows.map((client: any) => ({
+      const clientRows = (clientResult.data ?? []) as ClientRow[];
+      const invoiceRows = (invoiceResult.data ?? []) as InvoiceRow[];
+      const expenseRows = (expenseResult.data ?? []) as ExpenseRow[];
+      const clientMap = new Map<string, ClientRow>(clientRows.map(client => [client.id, client]));
+      setClients(clientRows.map(client => ({
         id: client.id, name: client.name, company: client.company ?? "Independent",
         email: client.email ?? "", initials: client.name.split(" ").map((part: string) => part[0]).join("").slice(0, 2).toUpperCase(),
         tone: "bg-teal-100 text-teal-800"
       })));
-      setInvoices((invoiceResult.data ?? []).map((invoice: any) => ({
+      setInvoices(invoiceRows.map(invoice => ({
         id: invoice.invoice_number, dbId: invoice.id,
         client: clientMap.get(invoice.client_id)?.company || clientMap.get(invoice.client_id)?.name || "Unassigned client",
         amount: Number(invoice.total), due: new Date(invoice.due_date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
         status: invoice.status === "paid" ? "Paid" : invoice.status === "overdue" ? "Overdue" : "Pending"
       })));
-      setExpenses((expenseResult.data ?? []).map((expense: any) => ({
+      setExpenses(expenseRows.map(expense => ({
         id: expense.id, label: expense.description, category: expense.category,
         date: new Date(expense.expense_date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "2-digit" }),
         amount: Number(expense.amount)
