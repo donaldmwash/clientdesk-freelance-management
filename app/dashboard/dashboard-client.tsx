@@ -58,7 +58,7 @@ export default function DashboardClient({ userEmail }: { userEmail: string }) {
       })));
       setInvoices(invoiceRows.map(invoice => ({
         id: invoice.invoice_number, dbId: invoice.id,
-        client: clientMap.get(invoice.client_id)?.company || clientMap.get(invoice.client_id)?.name || "Unassigned client",
+        client: clientMap.get(invoice.client_id ?? "")?.company || clientMap.get(invoice.client_id ?? "")?.name || "Unassigned client",
         amount: Number(invoice.total), due: new Date(invoice.due_date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
         status: invoice.status === "paid" ? "Paid" : invoice.status === "overdue" ? "Overdue" : "Pending"
       })));
