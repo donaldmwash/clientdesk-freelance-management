@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Activity, ArrowDownRight, ArrowUpRight, Bell, BriefcaseBusiness, CalendarDays, Check, ChevronDown, CircleHelp, CreditCard, Download, FileText, LayoutDashboard, Menu, MoreHorizontal, Plus, Search, Settings, Users, Wallet, X } from "lucide-react";
 
 type Client = { id: number; name: string; company: string; email: string; initials: string; tone: string };
@@ -31,14 +33,15 @@ function Status({ value }: { value: Invoice["status"] }) {
   return <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${styles}`}>{value}</span>;
 }
 
-export default function Home() {
+export default function DashboardClient({ userEmail }: { userEmail: string }) {
+  const router = useRouter();
   const [tab, setTab] = useState("Overview");
   const [clients, setClients] = useState(initialClients);
   const [invoices, setInvoices] = useState(initialInvoices);
   const [expenses, setExpenses] = useState(initialExpenses);
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState<"client" | "invoice" | "expense" | null>(null);
-  const [notice, setNotice] = useState("Demo workspace · Changes stay in this browser");
+  const [notice, setNotice] = useState("Demo records · Database connection ready");
   const [name, setName] = useState("");
   const [detail, setDetail] = useState("");
   const [amount, setAmount] = useState("");
@@ -86,7 +89,7 @@ export default function Home() {
         <button onClick={() => setNotice("Settings will be available with account setup")} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-500 hover:bg-slate-50"><Settings size={18}/>Settings</button>
         <button onClick={() => setNotice("Help centre coming soon")} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-slate-500 hover:bg-slate-50"><CircleHelp size={18}/>Help centre</button>
         <div className="mt-auto rounded-2xl bg-[#f4f7f3] p-4"><div className="mb-2 flex items-center gap-2 text-xs font-semibold text-brand"><Activity size={15}/>Your business, in focus</div><p className="text-xs leading-5 text-slate-500">A calmer way to keep clients, cash flow and work organised.</p></div>
-        <div className="mt-5 flex items-center gap-3 border-t border-line pt-5"><div className="grid h-9 w-9 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">DM</div><div className="min-w-0"><p className="truncate text-sm font-semibold">Demo account</p><p className="text-xs text-slate-400">Freelance workspace</p></div><MoreHorizontal className="ml-auto text-slate-400" size={18}/></div>
+        <div className="mt-5 flex items-center gap-3 border-t border-line pt-5"><div className="grid h-9 w-9 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">DM</div><div className="min-w-0"><p className="truncate text-sm font-semibold">{userEmail}</p><p className="text-xs text-slate-400">Your workspace</p></div><button onClick={async () => { await createSupabaseBrowserClient().auth.signOut(); router.replace("/login"); router.refresh(); }} className="ml-auto text-xs font-semibold text-slate-500 hover:text-rose-600">Sign out</button></div>
       </aside>
 
       <main className="min-w-0 flex-1">
