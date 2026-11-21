@@ -1,56 +1,139 @@
 # ClientDesk
 
-A freelance business management workspace for independent professionals and small service businesses.
+A web workspace for freelancers and independent service businesses to keep client records, invoices, and expenses in one place.
 
-ClientDesk brings client records, invoices, expenses, and cash-flow visibility into one focused workspace.
+**Live application:** https://clientdesk-freelance-management.vercel.app  
+**Repository:** https://github.com/donaldmwash/clientdesk-freelance-management
 
-## Product goals
+> ClientDesk is an actively developed portfolio project. Review the current limitations below before using it for real business records.
 
-- Manage client relationships and contact details
-- Create and track invoices, line items, due dates, and payment status
-- Record business expenses and categories
-- Review revenue, outstanding invoices, expenses, and net profit
-- Keep each account's business data private through Supabase Row Level Security
+## What it currently does
 
-## Stack
+- Email/password sign-up and sign-in through Supabase Auth
+- Authenticated dashboard backed by Supabase PostgreSQL
+- Create and view client records
+- Create and view invoices linked to an existing client
+- Mark an invoice as paid
+- Record and view business expenses
+- Search the client list
+- Display basic collected-revenue, outstanding-invoice, and expense totals
+- Isolate account data with PostgreSQL Row Level Security (RLS)
 
-- Next.js App Router + TypeScript
+## Technology
+
+- Next.js 15 App Router and React 19
+- TypeScript
 - Tailwind CSS
-- Supabase Auth + PostgreSQL
-- Vercel deployment
-- Vitest for unit tests
+- Supabase Auth, PostgreSQL, and `@supabase/ssr`
+- Vitest
+- GitHub Actions
+- Vercel
 
-## Local setup
+## Run locally
 
-1. Install Node.js 20.9+.
-2. Install dependencies: `npm install`.
-3. Copy `.env.example` to `.env.local` and add your Supabase project URL and anon key.
-4. Run the SQL in `supabase/schema.sql` in the Supabase SQL editor.
-5. Start the app: `npm run dev`.
+### Requirements
 
-The application uses Supabase email/password authentication. Signed-in users can create clients, invoices and expenses, review their own records, and mark invoices as paid. Records are stored in PostgreSQL and protected by owner-scoped Row Level Security.\n\nFor email confirmation, add your deployed Vercel URL to Supabase Authentication → URL Configuration. Set the Site URL to `https://clientdesk-freelance-management.vercel.app` and add `https://clientdesk-freelance-management.vercel.app/auth/callback` to the Redirect URLs list.
+- Node.js 20 or newer
+- npm
+- A Supabase project
 
-## Environment variables
+### 1. Install dependencies
 
-See `.env.example`. Never commit real credentials.
+```bash
+git clone https://github.com/donaldmwash/clientdesk-freelance-management.git
+cd clientdesk-freelance-management
+npm install
+```
 
-## Quality checks
+### 2. Configure environment variables
 
-- `npm run lint`
-- `npm run test`
-- `npm run build`
+Copy `.env.example` to `.env.local` and provide the public Supabase project URL and anon/publishable key:
 
-## Security
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_OR_PUBLISHABLE_KEY
+```
 
-Database tables use owner-scoped Row Level Security. All production records must be accessed through an authenticated Supabase session. Do not disable RLS.
+Never place a Supabase service-role key in a `NEXT_PUBLIC_*` variable or commit private credentials.
+
+### 3. Set up the database
+
+Run the SQL in `supabase/schema.sql` in the Supabase SQL Editor. This creates the application tables, indexes, and owner-scoped RLS policies.
+
+Keep RLS enabled. For an existing database, review and apply schema changes as migrations rather than blindly rerunning table definitions.
+
+### 4. Configure authentication redirects
+
+In Supabase Authentication URL Configuration:
+
+- Set the Site URL to your local development URL while developing, for example `http://localhost:3000`.
+- Add `http://localhost:3000/auth/callback` to the allowed Redirect URLs.
+- Add your deployed application's callback URL when configuring the production environment.
+
+### 5. Start the development server
+
+```bash
+npm run dev
+```
+
+Open http://localhost:3000.
+
+## Available scripts
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the local development server |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run the Vitest suite once |
+| `npm run build` | Create a production build |
+| `npm start` | Serve the production build |
+
+GitHub Actions runs linting, unit tests, and a production build for pushes and pull requests targeting `main`.
+
+## Project structure
+
+```
+app/
+  auth/callback/       Supabase authentication callback
+  dashboard/           Authenticated workspace
+  login/               Sign-in and registration
+  globals.css          Global styles
+  layout.tsx           Root layout and metadata
+lib/
+  finance.ts           Financial calculation helpers
+  finance.test.ts      Unit tests for calculation helpers
+  supabase/            Browser and server Supabase clients
+supabase/
+  schema.sql           Database tables, indexes, and RLS policies
+.github/workflows/
+  ci.yml               Continuous integration workflow
+middleware.ts           Supabase session refresh
+```
+
+## Security notes
+
+- The browser uses the Supabase public anon/publishable key; access control must be enforced by database RLS policies.
+- Each user's records are intended to be scoped to their authenticated Supabase user ID.
+- Do not disable RLS or expose service-role credentials in browser code.
+- Before production use, validate tenant ownership across related records, review authorization policies, and test access using separate user accounts.
+
+## Current limitations
+
+- Invoice PDF generation and email delivery are not implemented.
+- Editing and deleting client, invoice, and expense records are not yet available in the interface.
+- Payment collection and payment-provider integrations are not implemented; marking an invoice paid is a manual record update, not proof of a payment.
+- Currency is currently presented as USD in the dashboard.
+- Automated end-to-end tests and a full production security review are still required.
+- The live deployment depends on correctly configured Supabase environment variables and redirect settings.
 
 ## Roadmap
 
-- [x] Product foundation and dashboard concept
-- [x] Supabase schema with tenant isolation
-- [x] Email/password authentication and core database-backed create/read/update workflows
-- [ ] Invoice PDF generation
-- [ ] Expanded end-to-end coverage and production verification
+- [ ] Complete tenant-isolation and related-record authorization tests
+- [ ] Add editable and deletable records with validation
+- [ ] Add invoice line items, PDF generation, and email delivery
+- [ ] Add currency-aware reporting and date-range filters
+- [ ] Add end-to-end tests for authentication and core workflows
+- [ ] Complete production security, accessibility, and deployment verification
 
 ## License
 
